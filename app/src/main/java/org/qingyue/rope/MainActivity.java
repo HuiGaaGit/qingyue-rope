@@ -30,6 +30,7 @@ public final class MainActivity extends Activity {
     private Plan selectedPlan=new Plan(Plan.Mode.FREE,60,15,3);
     private CameraController camera;
     private final JumpDetector detector=new JumpDetector();
+    private final NumericDiagnostics diagnostics=new NumericDiagnostics();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private long lastCheckpoint,lastFrameAt,cameraOpenedAt,bodyLostAt;
     private boolean visible,front=true,resuming,finalSaved;
@@ -191,7 +192,7 @@ public final class MainActivity extends Activity {
         phaseText=text("准备入镜",14,WHITE,true);phaseText.setPadding(dp(12),dp(8),dp(12),dp(8));phaseText.setBackground(bg(0xb320242d,20));top.addView(phaseText);root.addView(top,new FrameLayout.LayoutParams(-1,-2,Gravity.TOP));
         centerText=text("",30,WHITE,true);centerText.setGravity(Gravity.CENTER);centerText.setPadding(dp(24),dp(8),dp(24),dp(8));FrameLayout.LayoutParams center=new FrameLayout.LayoutParams(-1,-2,Gravity.CENTER);root.addView(centerText,center);
         LinearLayout bottom=column();bottom.setPadding(dp(16),dp(12),dp(16),dp(16));bottom.setBackground(bg(0xe6141820,20));
-        feedbackText=text("正在加载本地模型…",14,WHITE,false);feedbackText.setGravity(Gravity.CENTER);feedbackText.setMinHeight(dp(48));bottom.addView(feedbackText);space(bottom,10);
+        feedbackText=text("正在加载本地模型…",14,WHITE,false);feedbackText.setGravity(Gravity.CENTER);feedbackText.setMinHeight(dp(48));feedbackText.setOnLongClickListener(v->{showDiagnostics();return true;});bottom.addView(feedbackText);space(bottom,10);
         LinearLayout controls=row();LinearLayout speech=column();speech.setGravity(Gravity.CENTER);speech.addView(new Icons(this,Icons.Kind.VOICE,WHITE,false),new LinearLayout.LayoutParams(dp(32),dp(32)));voiceText=text("语音开",12,WHITE,false);speech.addView(voiceText);speech.setContentDescription("切换语音报数");speech.setOnClickListener(v->{speaker.enable(!speaker.enabled());preferences.edit().putBoolean("voice",speaker.enabled()).apply();updateTraining();});controls.addView(speech,new LinearLayout.LayoutParams(dp(66),dp(60)));
         primaryButton=button("打开相机",ORANGE,this::primaryAction);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,dp(56),1);pp.setMargins(dp(8),0,dp(8),0);controls.addView(primaryButton,pp);
         Button end=button("结束",0xff333a46,this::confirmEnd);end.setTextSize(14);controls.addView(end,new LinearLayout.LayoutParams(dp(68),dp(56)));bottom.addView(controls);space(bottom,10);
@@ -224,17 +225,28 @@ public final class MainActivity extends Activity {
                 boolean jump=allow&&detector.update(pose);
                 if(resuming&&detector.ready()) {engine.resume(time);detector.discardCycle();resuming=false;lastPhase=engine.phase();checkpoint(true);speaker.say("继续训练");}
                 if(engine!=null&&jump&&engine.jump(time,pose.capturedAtMs)){checkpoint(true);if(engine.total()%reportEvery==0)speaker.say(engine.total()+"个");}
-                if(engine!=null&&engine.phase()==SessionEngine.Phase.WORK&&!pose.fullBody()){
+                PoseQuality quality=PoseQuality.assess(pose);
+                if(preferences.getBoolean("diagnostics",false))diagnostics.sample(pose,detector,engine==null?0:engine.phase().ordinal(),engine==null?0:engine.total());
+                if(engine!=null&&engine.phase()==SessionEngine.Phase.WORK&&!quality.personVisible){
                     if(bodyLostAt==0)bodyLostAt=time;
                     if(time-bodyLostAt>=3000){pauseTraining("离开画面超过3秒，已自动暂停");return;}
                 }else bodyLostAt=0;
-                cameraMessage=pose.fullBody()?(detector.ready()?"识别稳定，保持双脚同步轻跳":"请站稳片刻，正在校准"):"请让头、肩、髋、膝和双脚完整入镜";
+                cameraMessage=recognitionMessage(quality);
                 if(engine!=null&&engine.phase()==SessionEngine.Phase.REST)cameraMessage="组间休息中，跳跃不计入次数";
                 updateTraining();
             }
             public void error(String message){if(generation!=cameraGeneration)return;pauseTraining(message);}
         });
         updateTraining();
+    }
+    private String recognitionMessage(PoseQuality quality){
+        if(quality.reason==PoseQuality.NO_TORSO)return "未找到躯干：请正面对准镜头，让肩和髋进入画面，增加照明";
+        if(quality.reason==PoseQuality.FEET_MISSING)return "已找到人物：请让双脚入镜、减少脚部遮挡，避免逆光";
+        if(quality.reason==PoseQuality.TOO_SMALL)return "已找到人物：请稍靠近相机，让肩和双脚更清晰";
+        if(quality.reason==PoseQuality.NOT_UPRIGHT)return "已找到人物：请直立，让相机能同时看到肩、髋和双脚";
+        if(quality.reason==PoseQuality.CAMERA_MOVING||detector.status()==JumpDetector.Status.MOVING)return "检测到画面或位置移动：请固定手机并回到原位站稳";
+        if(detector.status()==JumpDetector.Status.OCCLUDED)return "短暂遮挡：本次未完成跳跃不计数，双脚落地后继续";
+        return detector.ready()?"识别就绪，保持双脚同步轻跳":"已找到人物：请双脚落地站稳约1秒，正在校准";
     }
     private void closeCamera(){cameraGeneration++;if(camera!=null){camera.close();camera=null;}detector.reset();if(preview!=null)preview.clear();getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);}
     private void pauseTraining(String reason){
@@ -277,7 +289,7 @@ public final class MainActivity extends Activity {
         voiceText.setText(!speaker.enabled()?"语音关":speaker.ready()?"语音开":"语音不可用");
         primaryButton.setEnabled(!resuming);
         primaryButton.setAlpha(resuming?.6f:1);
-        primaryButton.setText(phase==SessionEngine.Phase.READY?(camera==null?"打开相机":detector.ready()?"开始训练":"等待全身入镜"):phase==SessionEngine.Phase.PAUSED?(resuming?"正在校准…":"继续训练"):"暂停");
+        primaryButton.setText(phase==SessionEngine.Phase.READY?(camera==null?"打开相机":detector.ready()?"开始训练":"等待计数就绪"):phase==SessionEngine.Phase.PAUSED?(resuming?"正在校准…":"继续训练"):"暂停");
         if(camera!=null)getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
     private void confirmEnd(){
@@ -330,14 +342,20 @@ public final class MainActivity extends Activity {
         LinearLayout box=column();box.setPadding(dp(22),dp(10),dp(22),dp(14));CheckBox voice=new CheckBox(this);voice.setText("启用离线语音报数");voice.setChecked(speaker.enabled());voice.setOnCheckedChangeListener((b,checked)->{speaker.enable(checked);preferences.edit().putBoolean("voice",checked).apply();});box.addView(voice);
         TextView status=text(speaker.status()+"。不会自动下载语音包。",13,GRAY,false);box.addView(status);space(box,16);box.addView(text("报数间隔",15,INK,true));
         RadioGroup group=new RadioGroup(this);for(int value:new int[]{1,10,20}){RadioButton radio=new RadioButton(this);radio.setId(value);radio.setText(value==1?"每个报数（可能跟不上较快节奏）":"每"+value+"个报数");group.addView(radio);}group.check(reportEvery);group.setOnCheckedChangeListener((g,id)->{reportEvery=id;preferences.edit().putInt("reportEvery",id).apply();});box.addView(group);space(box,15);
+        CheckBox diagnostic=new CheckBox(this);diagnostic.setText("本地数值诊断（仅内存，最多1分钟）");diagnostic.setChecked(preferences.getBoolean("diagnostics",false));diagnostic.setOnCheckedChangeListener((b,checked)->{preferences.edit().putBoolean("diagnostics",checked).apply();diagnostics.clear();});box.addView(diagnostic);
+        Button trace=button("查看数值诊断",BG,this::showDiagnostics);trace.setTextColor(INK);box.addView(trace);space(box,12);
         Button about=button("隐私说明与开源许可",BG,this::showAbout);about.setTextColor(INK);box.addView(about);space(box,12);
         Button clear=button("清除本地训练历史",BG,()->new AlertDialog.Builder(this).setTitle("清除全部历史？").setMessage("此操作仅删除本机已完成的训练记录，删除后无法恢复。")
                 .setNegativeButton("取消",null).setPositiveButton("确认清除",(d,w)->{try{store.clearHistory();toast("本地训练历史已清除");showHome();}catch(IOException e){toast("清除失败，原记录已保留");}}).show());clear.setTextColor(ORANGE);box.addView(clear);
         ScrollView scroll=new ScrollView(this);scroll.addView(box);new AlertDialog.Builder(this).setTitle("训练设置").setView(scroll).setPositiveButton("完成",null).show();
     }
+    private void showDiagnostics(){
+        String data=diagnostics.csv();ScrollView scroll=new ScrollView(this);TextView view=text("只含肩、髋、踝分数、人物获取和计数就绪标记、相对时间及图像尺寸等数值。不会保存图像或视频，不自动上传。关闭诊断或退出进程会清空。\nstatus: 0未找到 1校准 2跟踪 3遮挡 4移动\nreason: 0正常 1躯干缺失 2脚部缺失 3人物过小 4非直立 5相机移动\n\n"+data,11,INK,false);view.setPadding(dp(18),dp(12),dp(18),dp(12));view.setTextIsSelectable(true);scroll.addView(view);
+        new AlertDialog.Builder(this).setTitle("本地数值诊断 · "+diagnostics.size()+"帧").setView(scroll).setNegativeButton("关闭",null).setPositiveButton("复制数值",(d,w)->{android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);clipboard.setPrimaryClip(ClipData.newPlainText("轻跃数值诊断",data));toast("数值已复制，由你选择是否分享");}).show();
+    }
     private void showAbout(){
         String license="";try(InputStream stream=getAssets().open("LICENSE-2.0.txt");ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] b=new byte[4096];int n;while((n=stream.read(b))>=0)out.write(b,0,n);license=out.toString("UTF-8");}catch(IOException ignored){}
-        ScrollView scroll=new ScrollView(this);TextView body=text("轻跃跳绳 0.1.0 · 开源 MVP\n\n只申请相机权限。不含广告、登录、社交、会员或分析追踪；不申请网络、录音、位置和存储权限。画面仅用于本机姿态识别，不上传、不写入录像；退出或暂停释放相机。训练计数和时长保存在应用私有目录，禁用系统备份，卸载或清除数据会删除记录。语音仅使用系统已安装的离线中文声音。\n\n算法识别双脚的起落，不能证明绳圈通过，也不适用于交替脚或双摇验证。请固定手机，确保光线与单人全身入镜。计数准确率尚未经真人测试。\n\n原创应用代码和图标：Apache-2.0。TensorFlow Lite 与 MoveNet：Apache-2.0，Google/TensorFlow Authors。UI研究参考天天跳绳的小米官方截图，未使用其Logo或素材。完整依赖与模型来源见源码 THIRD_PARTY_NOTICES.md。\n\n此MVP使用公开的AOSP测试签名，只用于测试验收；正式分发需使用所有者提供的签名。\n\n"+license,13,INK,false);body.setPadding(dp(22),dp(12),dp(22),dp(18));scroll.addView(body);new AlertDialog.Builder(this).setTitle("隐私与开源").setView(scroll).setPositiveButton("关闭",null).show();
+        ScrollView scroll=new ScrollView(this);TextView body=text("轻跃跳绳 0.1.2 · 开源 MVP\n\n只申请相机权限。不含广告、登录、社交、会员或分析追踪；不申请网络、录音、位置和存储权限。画面仅用于本机姿态识别，不上传、不写入录像；退出或暂停释放相机。训练计数和时长保存在应用私有目录，禁用系统备份，卸载或清除数据会删除记录。语音仅使用系统已安装的离线中文声音。\n\n算法识别双脚的起落，不能证明绳圈通过，也不适用于交替脚或双摇验证。请固定手机，确保光线与单人全身入镜。计数准确率尚未经真人测试。\n\n原创应用代码和图标：Apache-2.0。TensorFlow Lite 与 MoveNet：Apache-2.0，Google/TensorFlow Authors。UI研究参考天天跳绳的小米官方截图，未使用其Logo或素材。完整依赖与模型来源见源码 THIRD_PARTY_NOTICES.md。\n\n此MVP使用公开的AOSP测试签名，只用于测试验收；正式分发需使用所有者提供的签名。\n\n"+license,13,INK,false);body.setPadding(dp(22),dp(12),dp(22),dp(18));scroll.addView(body);new AlertDialog.Builder(this).setTitle("隐私与开源").setView(scroll).setPositiveButton("关闭",null).show();
     }
     private long dayStart(long epoch){Calendar c=Calendar.getInstance();c.setTimeInMillis(epoch);c.set(Calendar.HOUR_OF_DAY,0);c.set(Calendar.MINUTE,0);c.set(Calendar.SECOND,0);c.set(Calendar.MILLISECOND,0);return c.getTimeInMillis();}
     private boolean sameDay(long a,long b){return dayStart(a)==dayStart(b);}

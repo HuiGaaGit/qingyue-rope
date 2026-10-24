@@ -1,10 +1,17 @@
 """Compile using pinned AOSP Maven tools. Does not install an SDK or accept agreements."""
 from pathlib import Path
-import hashlib,json,os,shutil,struct,subprocess,sys,zipfile
+import hashlib,json,os,shutil,struct,subprocess,sys,zipfile,xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 TOOLS=ROOT/'.tools'; BUILD=ROOT/'build';DIST=ROOT/'dist'
 if hasattr(sys.stdout,'reconfigure'):sys.stdout.reconfigure(encoding='utf-8')
+
+def app_version():
+    return ET.parse(ROOT/'app/src/main/AndroidManifest.xml').getroot().attrib['{http://schemas.android.com/apk/res/android}versionName']
+
+def runtime_inputs():
+    return {p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted((ROOT/'app/src').rglob('*')) if p.is_file()}
 
 def run(args):
     result=subprocess.run([str(x) for x in args],cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -113,7 +120,7 @@ def main():
         print('Reusing just-passed core tests; core/test source files are unchanged.')
     else:tests(java)
     if '--test-only' in sys.argv:return
-    validate_dependencies();gen=resources()
+    validate_dependencies();gen=resources();input_hashes=runtime_inputs()
     aapt=TOOLS/'aapt2/aapt2.exe';api=TOOLS/'android-all.jar'
     classes=BUILD/'classes';dex=BUILD/'dex'
     for directory in (classes,dex):clean_dir(directory)
@@ -134,13 +141,17 @@ def main():
         for file in sorted((TOOLS/'litert/jni').glob('*/*.so')):
             add_aligned(z,'lib/'+file.parent.name+'/'+file.name,file.read_bytes(),16384)
     sign=BUILD/'sign';clean_dir(sign);compile_java(java,[ROOT/'scripts/SignAndVerify.java'],sign,[TOOLS/'apksig.jar'])
-    apk=DIST/'qingyue-rope-0.1.0-test.apk'
+    apk=DIST/('qingyue-rope-'+app_version()+'-test.apk')
     verify=run([java/'java.exe','-cp',str(sign)+os.pathsep+str(TOOLS/'apksig.jar'),'SignAndVerify','sign',unsigned,apk,TOOLS/'testkey.pk8',TOOLS/'testkey.x509.pem'])
     (BUILD/'apk-signature.txt').write_text(verify,encoding='utf-8');verify_package(apk)
     badging=run([aapt,'dump','badging',apk]);(BUILD/'apk-badging.txt').write_text(badging,encoding='utf-8')
     permissions=run([aapt,'dump','permissions',apk]);(BUILD/'apk-permissions.txt').write_text(permissions,encoding='utf-8')
     assert 'android.permission.INTERNET' not in permissions and 'android.permission.CAMERA' in permissions
-    checksum=hashlib.sha256(apk.read_bytes()).hexdigest();(DIST/'SHA256SUMS.txt').write_text(checksum+'  '+apk.name+'\n',encoding='utf-8')
+    checksum=hashlib.sha256(apk.read_bytes()).hexdigest();(DIST/('SHA256SUMS-'+app_version()+'.txt')).write_text(checksum+'  '+apk.name+'\n',encoding='utf-8')
+    assert runtime_inputs()==input_hashes,'Runtime source changed during compilation'
+    (BUILD/'build-inputs.json').write_text(json.dumps({'version':app_version(),'source_files':input_hashes,'apk_sha256':checksum,
+        'dex_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(dex.glob('*.dex'))},
+        'app_classes_jar_sha256':hashlib.sha256((BUILD/'app-classes.jar').read_bytes()).hexdigest()},indent=2)+'\n',encoding='utf-8')
     print(f'BUILT {apk.name}: {apk.stat().st_size} bytes SHA256 {checksum}')
 
 if __name__=='__main__':main()

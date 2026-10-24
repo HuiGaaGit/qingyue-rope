@@ -1,8 +1,8 @@
 {
-  "apk": "qingyue-rope-0.1.0-test.apk",
-  "bytes": 25027745,
-  "sha256": "bc30dd9ed217b96e2fe9eb895c8194adefc7b80caa8ff1c02e961d4d068d132c",
-  "classes": 105,
+  "apk": "qingyue-rope-0.1.2-test.apk",
+  "bytes": 25043003,
+  "sha256": "da1aec8f3b29b1c99369782c93052c07c1e56078c0f2478514b12d680374292f",
+  "classes": 117,
   "native": {
     "arm64-v8a": {
       "bits": 64,

@@ -1,0 +1,3 @@
+Reproduced on unchanged 0.1.1 JumpDetector, before gap fixes:
+FAIL reliable return after long loss cannot reuse expired calibration: 901ms without reliable evidence must recalibrate, despite only one bad sample
+FAIL body-relative horizontal gate has equal physical scale across aspect ratios: same allowed body-relative shift for portrait/landscape

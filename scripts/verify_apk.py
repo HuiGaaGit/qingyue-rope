@@ -2,6 +2,7 @@
 from pathlib import Path
 import hashlib,json,struct,sys,zipfile,zlib
 from verify_static import elf_info
+from build import app_version
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -25,7 +26,7 @@ def dex_classes(data):
     return descriptors
 
 def main():
-    apk=Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'dist/qingyue-rope-0.1.0-test.apk'
+    apk=Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'dist'/('qingyue-rope-'+app_version()+'-test.apk')
     data=apk.read_bytes();report={'apk':apk.name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'classes':0,'native':{},'permissions':'See aapt2 dump log, not inferred from source'}
     expected={'armeabi-v7a':(32,40),'arm64-v8a':(64,183),'x86':(32,3),'x86_64':(64,62)}
     with zipfile.ZipFile(apk) as z:
@@ -33,6 +34,7 @@ def main():
         names=z.namelist();assert len(set(names))==len(names)
         assert 'AndroidManifest.xml' in names and 'resources.arsc' in names
         model=z.read('assets/movenet.tflite');assert hashlib.sha256(model).hexdigest()=='0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab'
+        assert z.read('assets/THIRD_PARTY_NOTICES.md')==(ROOT/'THIRD_PARTY_NOTICES.md').read_bytes()
         assert z.read('assets/LiteRT-LICENSE.txt')==(ROOT/'licenses/LiteRT-LICENSE.txt').read_bytes()
         for item in z.infolist():
             name=item.filename

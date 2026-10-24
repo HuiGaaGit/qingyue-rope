@@ -11,6 +11,8 @@ import android.media.ImageReader;
 import android.os.*;
 import android.util.Size;
 import org.qingyue.rope.core.Pose;
+import org.qingyue.rope.core.FrameGeometry;
+import org.qingyue.rope.core.CameraMotionGuard;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -31,6 +33,10 @@ public final class CameraController implements AutoCloseable {
     private int rotation;
     private long lastFrame;
     private int[] pixels;
+    private final CameraMotionGuard motionGuard=new CameraMotionGuard();
+    private long sensorClockOffset=Long.MIN_VALUE;
+    private boolean timestampRealtime;
+    private boolean disableAutoRotateCrop;
     public CameraController(Context context,boolean preferFront,int displayRotation,Listener listener) {
         this.context=context.getApplicationContext();this.listener=listener;thread.start();worker=new Handler(thread.getLooper());
         worker.post(()->open(preferFront,displayRotation));
@@ -52,7 +58,10 @@ public final class CameraController implements AutoCloseable {
             if(chosen==null){error("未发现可用相机");return;}
             mirrored=Objects.equals(chars.get(CameraCharacteristics.LENS_FACING),CameraCharacteristics.LENS_FACING_FRONT);
             Integer sensor=chars.get(CameraCharacteristics.SENSOR_ORIENTATION);int angle=sensor==null?90:sensor;
-            rotation=mirrored?(angle+displayRotation)%360:(angle-displayRotation+360)%360;
+            rotation=FrameGeometry.rawRotation(angle,displayRotation,mirrored);
+            timestampRealtime=Objects.equals(chars.get(CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE),CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME);
+            if(Build.VERSION.SDK_INT>=31){int[] modes=chars.get(CameraCharacteristics.SCALER_AVAILABLE_ROTATE_AND_CROP_MODES);
+                if(modes!=null)for(int mode:modes)if(mode==CaptureRequest.SCALER_ROTATE_AND_CROP_NONE)disableAutoRotateCrop=true;}
             StreamConfigurationMap map=chars.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             Size[] sizes=map==null?null:map.getOutputSizes(ImageFormat.YUV_420_888);
             if(sizes==null||sizes.length==0){error("相机不支持所需的图像格式");return;}
@@ -70,6 +79,7 @@ public final class CameraController implements AutoCloseable {
                             if(closed){configured.close();return;}session=configured;
                             try {CaptureRequest.Builder request=device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                                 request.addTarget(reader.getSurface());request.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+                                if(Build.VERSION.SDK_INT>=31&&disableAutoRotateCrop)request.set(CaptureRequest.SCALER_ROTATE_AND_CROP,CaptureRequest.SCALER_ROTATE_AND_CROP_NONE);
                                 session.setRepeatingRequest(request.build(),null,worker);
                             }catch(CameraAccessException|IllegalStateException e){error("相机启动失败，请重试");}
                         }
@@ -84,30 +94,31 @@ public final class CameraController implements AutoCloseable {
     private void onImage(ImageReader source) {
         Image image=null;
         try {
-            image=source.acquireLatestImage();long captured=SystemClock.elapsedRealtime();
-            if(image==null||closed||model==null||captured-lastFrame<60)return;
-            lastFrame=captured;Bitmap bitmap=convert(image,rotation);Pose pose=model.detect(bitmap,captured);
+            image=source.acquireLatestImage();long acquired=SystemClock.elapsedRealtime();
+            if(image==null||closed||model==null||acquired-lastFrame<30)return;
+            lastFrame=acquired;long sensor=image.getTimestamp()/1000000,captured=acquired;
+            if(sensor>0){
+                if(timestampRealtime&&Math.abs(sensor-acquired)<5000)captured=sensor;
+                else {if(sensorClockOffset==Long.MIN_VALUE)sensorClockOffset=acquired-sensor;captured=sensor+sensorClockOffset;}
+            }
+            captured=Math.min(acquired,captured);
+            FrameGeometry.RgbFrame frame=convert(image,rotation);image.close();image=null;
+            boolean moving=motionGuard.update(frame);Pose pose=model.detect(frame,captured);
+            pose.cameraMoving=moving;pose.rotation=rotation;pose.mirror=mirrored?1:0;
+            Bitmap bitmap=Bitmap.createBitmap(frame.pixels,frame.width,frame.height,Bitmap.Config.ARGB_8888);
             main.post(()->{if(!closed)listener.frame(bitmap,pose,mirrored);});
         }catch(Exception|LinkageError e){error("图像处理失败，训练已暂停，请重试");}
         finally{if(image!=null)image.close();}
     }
-    private Bitmap convert(Image image,int degrees) {
+    private FrameGeometry.RgbFrame convert(Image image,int degrees) {
         Rect crop=image.getCropRect();int w=crop.width(),h=crop.height();
-        int ow=degrees==90||degrees==270?h:w,oh=degrees==90||degrees==270?w:h;
-        if(pixels==null||pixels.length!=ow*oh)pixels=new int[ow*oh];
-        Image.Plane[] planes=image.getPlanes();ByteBuffer y=planes[0].getBuffer(),u=planes[1].getBuffer(),v=planes[2].getBuffer();
-        int ys=planes[0].getRowStride(),yp=planes[0].getPixelStride(),us=planes[1].getRowStride(),up=planes[1].getPixelStride(),vs=planes[2].getRowStride(),vp=planes[2].getPixelStride();
-        for(int row=0;row<h;row++)for(int col=0;col<w;col++) {
-            int sx=col+crop.left,sy=row+crop.top;
-            int yy=(y.get(sy*ys+sx*yp)&255)-16,uu=(u.get((sy/2)*us+(sx/2)*up)&255)-128,vv=(v.get((sy/2)*vs+(sx/2)*vp)&255)-128;
-            int c=Math.max(0,yy)*298,r=clamp((c+409*vv+128)>>8),g=clamp((c-100*uu-208*vv+128)>>8),b=clamp((c+516*uu+128)>>8);
-            int dx=col,dy=row;
-            if(degrees==90){dx=h-1-row;dy=col;}else if(degrees==270){dx=row;dy=w-1-col;}else if(degrees==180){dx=w-1-col;dy=h-1-row;}
-            pixels[dy*ow+dx]=0xff000000|(r<<16)|(g<<8)|b;
-        }
-        return Bitmap.createBitmap(pixels,ow,oh,Bitmap.Config.ARGB_8888);
+        Image.Plane[] planes=image.getPlanes();
+        FrameGeometry.RgbFrame frame=FrameGeometry.yuv420(image.getWidth(),image.getHeight(),crop.left,crop.top,w,h,
+                new FrameGeometry.Plane(planes[0].getBuffer(),planes[0].getRowStride(),planes[0].getPixelStride()),
+                new FrameGeometry.Plane(planes[1].getBuffer(),planes[1].getRowStride(),planes[1].getPixelStride()),
+                new FrameGeometry.Plane(planes[2].getBuffer(),planes[2].getRowStride(),planes[2].getPixelStride()),degrees,pixels);
+        pixels=frame.pixels;return frame;
     }
-    private int clamp(int v){return Math.max(0,Math.min(255,v));}
     public void close() {
         if(closed)return;closed=true;
         worker.post(this::cleanup);

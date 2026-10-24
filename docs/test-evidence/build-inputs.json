@@ -1,0 +1,35 @@
+{
+  "version": "0.1.2",
+  "source_files": {
+    "app/src/main/AndroidManifest.xml": "d165a3d74a9e8e2131a7bc0eb0e63b40d1a9d21c2893f13c2d8c3c10ef51f88e",
+    "app/src/main/assets/LICENSE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "app/src/main/assets/LiteRT-LICENSE.txt": "71c6915d04265772a0339bed47276942c678b45cc01534210ebe6984fd1aec65",
+    "app/src/main/assets/movenet.tflite": "0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab",
+    "app/src/main/assets/THIRD_PARTY_NOTICES.md": "25f692e524b22bcbc956f77e40aa22917966d111f5a26bb0f970808e03eb25de",
+    "app/src/main/java/org/qingyue/rope/CameraController.java": "4a6a2e389ea0de83950f457ccc49372b53b106a08d75c415238e5e9e472c71cd",
+    "app/src/main/java/org/qingyue/rope/core/ArchiveCodec.java": "24a45b2fed1b1ab6f987aeab168fccbd2163cc9c7798e3e49981554d54a02902",
+    "app/src/main/java/org/qingyue/rope/core/CameraMotionGuard.java": "e9ce73e41fb028a5a196fa3779de2e03d65d7a86c82ef21065d4ae671e54ba63",
+    "app/src/main/java/org/qingyue/rope/core/FrameGeometry.java": "e3f105759549b53ba742d2ec6e21241602e4903098909fd15eb38a4b2cd5b818",
+    "app/src/main/java/org/qingyue/rope/core/JumpDetector.java": "724d7a6b99a7ed24541bac69450ae5c9f41655b563285659056f55e971dc50f9",
+    "app/src/main/java/org/qingyue/rope/core/NumericDiagnostics.java": "5388329c50cd724d9d130c147391c23f852c91cd91a2ac35ba0997812184b3f2",
+    "app/src/main/java/org/qingyue/rope/core/Plan.java": "1f2a15e1bfb47286f9da850853bc6792563c8d90f0824d2f5af35a68ff6a3c1e",
+    "app/src/main/java/org/qingyue/rope/core/Pose.java": "f9b2f84e3473c0261781203c6a5f771a76cbc85d37e5f56ab2d43fff9ab2e416",
+    "app/src/main/java/org/qingyue/rope/core/PoseQuality.java": "06e9341a22d6ad0e0d4a7109e9c76929f21993d4fa8d486a3fe380217a25e908",
+    "app/src/main/java/org/qingyue/rope/core/SessionEngine.java": "a112b83b355a0a090b578c5396540dda84f14042e0e5695930bba97f9db609d2",
+    "app/src/main/java/org/qingyue/rope/core/WorkoutRecord.java": "1bb424f82f505493a013235fad1cd7f75490aee8ee24c7f84b1b87d0a6a39a49",
+    "app/src/main/java/org/qingyue/rope/Icons.java": "01ca1df8ad0e455ab4240e142186dfc1be3a56f1d1f11f5454cd0bbbf656402b",
+    "app/src/main/java/org/qingyue/rope/LocalStore.java": "a2b8a068e742c545f8f4ca4bd2d7bd0ff9dc3a3032742faa4b755b96f7864bbd",
+    "app/src/main/java/org/qingyue/rope/MainActivity.java": "49d60e880fc269bed80bd538a3cdec2098f06a9ccb2a497c002f5e898453be98",
+    "app/src/main/java/org/qingyue/rope/MoveNet.java": "4c7955006015d3f6e121955e3742ef8096acfebd96c0432c332aadf757089343",
+    "app/src/main/java/org/qingyue/rope/OfflineSpeaker.java": "c0810e11857662834d7c7dcc3d571169ec5b8cce34e65fc49d80e52c053e4b22",
+    "app/src/main/java/org/qingyue/rope/PosePreview.java": "4bc5ba9228121acbc038de9ea392fc0e2c96a415d6d8fcac262bdbfd3787b358",
+    "app/src/main/res/drawable/ic_launcher.xml": "15d1a4ac3b7cc9988fa86673436c044eb8aee18ef0f1f8a3d289a489512b5681",
+    "app/src/main/res/values/styles.xml": "9f0691535a7a1e53e26f510ecd69a34a09da21ca031631d8dff43b05eb2e05cb",
+    "app/src/main/res/xml/data_extraction_rules.xml": "674b51a90b38420bcb76b4ed07f8bafdc4d8d48754ebf4e16888520259ab5acb"
+  },
+  "apk_sha256": "da1aec8f3b29b1c99369782c93052c07c1e56078c0f2478514b12d680374292f",
+  "dex_sha256": {
+    "classes.dex": "e3ac2ca7048f21aed917e346604169d82137afda2fd31074f8660234c2af52a1"
+  },
+  "app_classes_jar_sha256": "710d2daab156e62093890716078bcdb0a29386496c309be7c17d55408108aa5b"
+}
