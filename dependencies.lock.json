@@ -1,0 +1,87 @@
+{
+  "Apache-2.0.txt": {
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+  },
+  "aapt2.jar": {
+    "bytes": 1947069,
+    "sha256": "d7911de3afa8d5de1f1213f5244de7144093442d4fc20c8eb75d188ebe132ea5",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/8.6.1-11315950/aapt2-8.6.1-11315950-windows.jar"
+  },
+  "aapt2.pom": {
+    "bytes": 1096,
+    "sha256": "a0c80db33f6b7c3c2739d15244f11a9876a51944ba9999e928f85f349fb56493",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/8.6.1-11315950/aapt2-8.6.1-11315950.pom"
+  },
+  "android-all.jar": {
+    "bytes": 137666235,
+    "sha256": "6be2218c6a53fe3c57bc22ebdc723edcb7270a8a6f187545708aa5c0ed813977",
+    "url": "https://repo.maven.apache.org/maven2/org/robolectric/android-all/14-robolectric-10818077/android-all-14-robolectric-10818077.jar"
+  },
+  "android-all.pom": {
+    "bytes": 1635,
+    "sha256": "4efe1d72f52c3cf0393c6d373eb2fc7d4e8e067b4a957802203731ad34a89c7f",
+    "url": "https://repo.maven.apache.org/maven2/org/robolectric/android-all/14-robolectric-10818077/android-all-14-robolectric-10818077.pom"
+  },
+  "apksig.jar": {
+    "bytes": 506969,
+    "sha256": "c070ed1394629d74641aa0906f60b2ffa1ee77e6366a1f93437f59717b1aeb89",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/8.6.1/apksig-8.6.1.jar"
+  },
+  "apksig.pom": {
+    "bytes": 932,
+    "sha256": "636220ab0cb12eb8e9b0ef58f478deff043afb5ac8fa9c0e7e3088c5a345b737",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/8.6.1/apksig-8.6.1.pom"
+  },
+  "kaggle-model-f16.tar.gz": {
+    "bytes": 4341252,
+    "sha256": "b72ab17b40b292f11d6613d49be6fd009bd99219d9834845cb3d2300ed327980",
+    "url": "https://www.kaggle.com/api/v1/models/google/movenet/tflite/singlepose-lightning-tflite-float16/1/download"
+  },
+  "litert-api.aar": {
+    "bytes": 23586,
+    "sha256": "6308d3789d7905d36f7aa98111295dde3e57f094f16b76794d5c41f1e1919865",
+    "url": "https://dl.google.com/dl/android/maven2/com/google/ai/edge/litert/litert-api/1.4.0/litert-api-1.4.0.aar"
+  },
+  "litert-api.pom": {
+    "bytes": 1657,
+    "sha256": "35e60b36fdedf1181bc983a3d04506fc5d51a833ab5cc65f0c4c06b7897bbb11",
+    "url": "https://dl.google.com/dl/android/maven2/com/google/ai/edge/litert/litert-api/1.4.0/litert-api-1.4.0.pom"
+  },
+  "litert.aar": {
+    "bytes": 8264240,
+    "sha256": "54b567572cb2d1295571c785198f87597809cbf22d6cb8acfeac23869041887d",
+    "url": "https://dl.google.com/dl/android/maven2/com/google/ai/edge/litert/litert/1.4.0/litert-1.4.0.aar"
+  },
+  "litert.pom": {
+    "bytes": 1813,
+    "sha256": "286847001f785ef08039d6245ec750e7dda473c6374b15b141b12f0c9a6b149b",
+    "url": "https://dl.google.com/dl/android/maven2/com/google/ai/edge/litert/litert/1.4.0/litert-1.4.0.pom"
+  },
+  "movenet-model-card.pdf": {
+    "bytes": 98241,
+    "sha256": "d3a00360716d751e114c91a1b3869d900b02572c0048a3ea419b85790842199e",
+    "url": "https://storage.googleapis.com/movenet/MoveNet.SinglePose%20Model%20Card.pdf"
+  },
+  "r8.jar": {
+    "bytes": 17059952,
+    "sha256": "9007144728d47b5f11338c9292d5b74899b6579ad9ddc6942d419e3600c3d6d7",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.6.27/r8-8.6.27.jar"
+  },
+  "r8.pom": {
+    "bytes": 2843,
+    "sha256": "1b6b59a1ffa2017762aae6d81acd11095474680aae2ac6814dbb8778ad8bf836",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.6.27/r8-8.6.27.pom"
+  },
+  "testkey.pk8": {
+    "bytes": 1217,
+    "sha256": "495675d32e89a149d5abe191f4e9c0e218b9068714e9b53a7c91e164a0741a23",
+    "url": "https://raw.githubusercontent.com/aosp-mirror/platform_build/android-14.0.0_r1/target/product/security/testkey.pk8"
+  },
+  "testkey.x509.pem": {
+    "bytes": 1675,
+    "sha256": "a4384ba815b9499a5ce349b4e33c1755278873fe2eac150a068823f526e6dbde",
+    "url": "https://raw.githubusercontent.com/aosp-mirror/platform_build/android-14.0.0_r1/target/product/security/testkey.x509.pem"
+  }
+}

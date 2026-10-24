@@ -1,0 +1,2 @@
+package: org.qingyue.rope
+uses-permission: name='android.permission.CAMERA'

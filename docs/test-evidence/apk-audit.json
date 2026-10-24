@@ -1,0 +1,69 @@
+{
+  "apk": "qingyue-rope-0.1.0-test.apk",
+  "bytes": 25027745,
+  "sha256": "bc30dd9ed217b96e2fe9eb895c8194adefc7b80caa8ff1c02e961d4d068d132c",
+  "classes": 105,
+  "native": {
+    "arm64-v8a": {
+      "bits": 64,
+      "machine": 183,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    },
+    "armeabi-v7a": {
+      "bits": 32,
+      "machine": 40,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    },
+    "x86": {
+      "bits": 32,
+      "machine": 3,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    },
+    "x86_64": {
+      "bits": 64,
+      "machine": 62,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    }
+  },
+  "permissions": "See aapt2 dump log, not inferred from source"
+}

@@ -1,0 +1,87 @@
+{
+  "source_manifest": "PASS camera-only, min26 target34, backups disabled",
+  "model": {
+    "input": {
+      "shape": [
+        1,
+        192,
+        192,
+        3
+      ],
+      "type": 3
+    },
+    "output": {
+      "shape": [
+        1,
+        1,
+        17,
+        3
+      ],
+      "type": 0
+    },
+    "bytes": 4758512,
+    "sha256": "0fac2226112d0371903ca86e3853cec24ef603a0b2f96f589b180f0ebdd135ab"
+  },
+  "native": {
+    "armeabi-v7a": {
+      "bits": 32,
+      "machine": 40,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    },
+    "arm64-v8a": {
+      "bits": 64,
+      "machine": 183,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    },
+    "x86": {
+      "bits": 32,
+      "machine": 3,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    },
+    "x86_64": {
+      "bits": 64,
+      "machine": 62,
+      "load_alignments": [
+        16384,
+        16384,
+        16384
+      ],
+      "needed": [
+        "libm.so",
+        "libdl.so",
+        "liblog.so",
+        "libc.so"
+      ]
+    }
+  }
+}

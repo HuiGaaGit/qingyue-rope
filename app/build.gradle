@@ -1,0 +1,18 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'org.qingyue.rope'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'org.qingyue.rope'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+    androidResources { noCompress += 'tflite' }
+    // Do not create a debug keystore in the user's home. The task-local build signs
+    // with existing public AOSP test materials; production signing is owner-supplied.
+    buildTypes { debug { signingConfig = null }; release { signingConfig = null; minifyEnabled false } }
+}
+dependencies { implementation 'com.google.ai.edge.litert:litert:1.4.0' }

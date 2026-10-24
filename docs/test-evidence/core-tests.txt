@@ -1,0 +1,31 @@
+PASS invalid training settings rejected
+PASS free training counts only after preparation
+PASS timed training exact deadline and late image
+PASS interval rest cannot count and has no final rest
+PASS pause and manual continue exclude wall time
+PASS pause during rest preserves remaining rest
+PASS paused countdown is not training time
+PASS large scheduler delay consumes exact bounded plan
+PASS old and future frame timestamps rejected
+PASS monotonic rollback cannot add elapsed time
+PASS process recovery always paused, same counts and remaining
+PASS manual finish idempotent without fake completed flag
+PASS archive checkpoint and exactly-once final commit
+PASS archive checksum and truncated input rejected
+PASS finished recovery remains ready for idempotent commit
+PASS synthetic 20 jumps 60rpm 15fps
+PASS synthetic 20 jumps 120rpm 15fps
+PASS synthetic 20 jumps 180rpm 15fps
+PASS synthetic 20 jumps 220rpm 15fps
+PASS synthetic 20 jumps 60rpm 30fps
+PASS synthetic 20 jumps 120rpm 30fps
+PASS synthetic 20 jumps 180rpm 30fps
+PASS synthetic 20 jumps 220rpm 30fps
+PASS synthetic hips-only squat is not a jump
+PASS synthetic feet-only motion is not a jump
+PASS synthetic small jitter never counts
+PASS loss, low confidence, NaN, cropped feet require calibration
+PASS stale/out-of-order detector frames cannot complete a cycle
+PASS detector reset at rest/pause prevents cross-boundary landing
+PASS work boundary keeps calibration but waits for a fresh grounded cycle
+RESULT 30 cases, 104 assertions passed. Synthetic keypoints only; not human accuracy.
